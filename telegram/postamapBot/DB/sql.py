@@ -2,7 +2,7 @@ import sqlalchemy
 # import pymysql
 
 class SqlClass:
-    db = 'mysql+pymysql://u1707968_default:HejHsi7dmB8E8NF5@31.31.196.62:3306/u1707968_default'
+    db = 'mysql+pymysql://'
     def __init__(self):
         self.engine = sqlalchemy.create_engine(self.db)
         self.connection = self.engine.connect()
