@@ -16,9 +16,14 @@ $postamat_id = intval($xc['url']['id']);
 
 
 $postomat = db_query("SELECT a.*,
- relevant_places.rubrica_text  
+ relevant_places.rubrica_text,
+ infrastructure.adres AS address,
+ infrastructure.city,
+ mos_realty.address AS houseAddress 
  FROM postamats AS a 
  LEFT JOIN relevant_places ON a.relevant_places_id = relevant_places.id 
+ LEFT JOIN infrastructure ON (a.lng = infrastructure.lng AND a.lat = infrastructure.lat) 
+ LEFT JOIN mos_realty ON (a.lng = mos_realty.lng AND a.lat = mos_realty.lat) 
  WHERE a.id=".$postamat_id." 
  LIMIT 1");
 
@@ -119,12 +124,11 @@ if ($inf != false) {
                   'geometry' => array('type' => 'Point', 'coordinates' => array(0 => $b['lat'], 1 => $b['lng'])),
                   'properties' => array(
                     'type' => 'com_postomat',
-                    'balloonContent' => 'Постомат конкурента',
+                    'balloonContent' => 'Конкуренты',
                     'clusterCaption' => 'Постомат конкурента',
-                    'hintContent' => $b['name'],
                     'iconCaption' => $b['name']
                    ),
-                  'options' => array('preset' => 'islands#blueCircleDotIconWithCaption')
+                  'options' => array('preset' => 'islands#orangeCircleDotIconWithCaption')
                  );
 
                  $i++;
@@ -152,13 +156,11 @@ if ($inf != false) {
                   'id' => $i,
                   'geometry' => array('type' => 'Point', 'coordinates' => array(0 => $b['lat'], 1 => $b['lng'])),
                   'properties' => array(
-                    'type' => 'com_postomat',
+                    'type' => 'infrastructure',
                     'balloonContent' => 'Инфраструктура',
-                    'clusterCaption' => 'Постомат',
-                    'hintContent' => $b['name'],
-                    'iconCaption' => $b['name']
+                    'hintContent' => $b['name']
                    ),
-                  'options' => array('preset' => 'islands#blackCircleDotIconWithCaption')
+                  'options' => array('preset' => 'islands#greenCircleDotIconWithCaption')
                  );
 
                  $i++;
@@ -173,6 +175,7 @@ if ($inf != false) {
 
 // достаём все транспортные объекты
 $transport = array();
+$sumPeopleAll = 0;
 
 $tr = db_query("SELECT * FROM transport");
 
@@ -186,6 +189,9 @@ if ($tr != false) {
             
             $distance1 = round($distance * 1000);
             $sumPeople = $b['input_people'] + $b['output_people'];
+            
+            $sumPeopleAll += $sumPeople;
+            
             $index = calcIndex($sumPeople,$distance1);
             
             $transport[] = array(
@@ -201,16 +207,37 @@ if ($tr != false) {
             
             $trIndex += $index;
             
+            // транспорт
+                 $arr['features'][] = array(
+                  'type' => 'Feature',
+                  'id' => $i,
+                  'geometry' => array('type' => 'Point', 'coordinates' => array(0 => $b['lat'], 1 => $b['lng'])),
+                  'properties' => array(
+                    'type' => 'transport',
+                    'balloonContent' => 'Транспорт',
+                    'hintContent' => $b['Name']
+                   ),
+                  'options' => array('preset' => 'islands#redCircleDotIconWithCaption')
+                 );
+
+                 $i++;
+           // ----------------------------------------------------
+            
         }
+    }
+    
+    if (!empty($sumPeopleAll)) {
+        $sumPeopleAll = round($sumPeopleAll / 90);
+        $sumPeopleAll = number_format($sumPeopleAll,0,'',' ');
     }
 }
 // -------------------------------------------------------------------------
 
 // достаём все дома
 $houses = array();
-
-$count = round(MOSCOW_HOUSES_AREA / MOSCOW_PEOPLES); // считаем сколько квадратов приходится на 1 человека
 $peoples_all = 0;
+$quarters_count_all = 0;
+$areaResidentialAll = 0;
 
 $tr = db_query("SELECT * FROM mos_realty");
 
@@ -224,9 +251,15 @@ if ($tr != false) {
             
             $peoples = null;
             
+            $peoples = round($b['w_FUNC_PEOPLE']);
+            $peoples_all += $peoples;
+            
+            if (!empty($b['living_quarters_count'])) {
+                $quarters_count_all += $b['living_quarters_count'];
+            }
+            
             if (!empty($b['area_residential'])) {
-                $peoples = round( $b['area_residential'] / $count );
-                $peoples_all += $peoples;
+                $areaResidentialAll += $b['area_residential'];
             }
             
             $distance1 = round($distance * 1000);
@@ -253,16 +286,91 @@ if ($tr != false) {
         $peoples_all = number_format($peoples_all,0,'',' ');
     }
     
+    if (!empty($areaResidentialAll)) {
+        $areaResidentialAll = number_format($areaResidentialAll,0,'',' ');
+    }
     
+    if (!empty($quarters_count_all)) {
+        $quarters_count_all = number_format($quarters_count_all,0,'',' ');
+    }
 }
 // -------------------------------------------------------------------------
 
-// считаем итоговый процент востребованности
-
-
-
-// -------------------------------------------------------------------------
 
 // для карты
 $json = json_encode($arr, true);
 file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/admin/modules/postomat/files/'.$dataJson,$json);
+
+
+// ссылки на документацию по моделям
+$modelsDoc = array();
+
+$modDoc = db_query("SELECT * FROM mln_model");
+
+if ($modDoc != false) {
+    foreach($modDoc as $b) {
+        $modelsDoc[ $b['id'] ] = array('name' => $b['name'],'url' => $b['URL']);
+    }
+}
+
+// цвета маршрутов
+
+$colorsRoute = array(
+  1 => '#DC143C',
+  2 => '#FF1493',
+  3 => '#FF4500',
+  4 => '#FFD700',
+  5 => '#32CD32',
+  6 => '#006400',
+  7 => '#008B8',
+  8 => '#4682B4',
+  9 => '#00008B',
+  10 => '#00FFFF',
+  11 => '#FF00FF',
+  12 => '#800000',
+  13 => '#8B4513',
+  14 => '#F4A460',
+  15 => '#4B0082',
+  16 => '#DA70D6',
+  17 => '#D2691E',
+  18 => '#A0522D',
+  19 => '#008000',
+  20 => '#20B2AA',
+  21 => '#1E90FF',
+  22 => '#483D8B',
+  23 => '#EE82EE',
+  24 => '#B8860B',
+  25 => '#32CD32',
+  26 => '#DC143C',
+  27 => '#FF1493',
+  28 => '#FF4500',
+  29 => '#FFD700',
+  30 => '#32CD32',
+  31 => '#006400',
+  32 => '#008B8',
+  33 => '#4682B4'
+);
+
+if (!empty($xc['url']['print'])) {
+    $xc['noMainTmp'] = true;
+}
+
+$address = null;
+               
+if (!empty($postomat[0]['city'])) {
+   $address = $postomat[0]['city'];
+}
+               
+if (!empty($postomat[0]['address'])) {     
+  if (!empty($address)) {
+     $address .= ', '.$postomat[0]['address'];
+  }
+                  
+  else {
+     $address = $postomat[0]['address'];
+  }
+}
+               
+if (empty($address) && !empty($postomat[0]['houseAddress'])) {
+   $address = $postomat[0]['houseAddress'];
+}

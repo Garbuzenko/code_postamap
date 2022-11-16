@@ -1,0 +1,15 @@
+.balloonContentDiv p {
+    margin: 1px 0;
+}
+
+.balloonContentDiv ul {
+    padding-left: 5px;
+}
+
+.balloonContentDiv ul li {
+    list-style-type: none;
+}
+
+.balloonContentDiv a, .balloonContentDiv a:visited {
+    font-weight: bold;
+}

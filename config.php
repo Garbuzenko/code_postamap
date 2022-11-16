@@ -14,7 +14,6 @@ $xc['db_name'] = '';
 $xc['db_user'] = '';
 $xc['db_pass'] = '';
 
-
 $xc['update'] = true; 
 $xc['noMainTmp'] = false;
 $xc['admin_panel_only'] = true; // если нужна только админка, то при заходе на сайт будет сразу перенаправлять туда

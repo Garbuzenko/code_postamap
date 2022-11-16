@@ -62,6 +62,8 @@
     
     <?=$xc['content'];?>
     
+    <?=$xc['js'];?>
+    
     <!-- Свои скрипты -->
     <script src="<?=DOMAIN;?>/lib/js/jquery/jquery.min.js"></script>
     <script src="<?=DOMAIN;?>/admin/js/<?=$xc['scripts'];?>"></script>

@@ -11,7 +11,7 @@
 
 <div class="col-sm-12 col-md-2 mb-2">
 <div class="dt-buttons btn-group" style="width: 100%;">
-<a style="padding: .290rem .75rem;" class="btn btn-primary buttons-copy buttons-html5" tabindex="0" aria-controls="datatable-buttons" href="<?=DOMAIN;?>/files/opendata/mos_objects_sportzone.csv"><span>Скачать CSV</span></a>
+<a style="padding: .290rem .75rem;" class="btn btn-primary buttons-copy buttons-html5" tabindex="0" aria-controls="datatable-buttons" href="<?=DOMAIN;?>/admin/files/csv/infrastructure.csv"><span>Скачать CSV</span></a>
 </div>
 </div>
 

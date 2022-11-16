@@ -1,0 +1,1 @@
+<script src="https://postamap.ru/admin/themplate/dist/assets/vendors/choices.js/choices.min.js"></script> 

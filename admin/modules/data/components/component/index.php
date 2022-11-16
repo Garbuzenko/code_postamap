@@ -66,17 +66,12 @@ if ($map[0]['data_table'] == 'transport') {
     
 }
 
-if ($map[0]['data_table'] == 'mln_type_sport') {
+if ($map[0]['data_table'] == 'postamats') {
     
     $data = db_query("SELECT SQL_CALC_FOUND_ROWS 
-    id,
-    type,
-    popular,
-    smile_html,
-    category,
-    season 
-    FROM mln_type_sport
-    ORDER BY type ASC 
+    *
+    FROM postamats
+    ORDER BY id  
     LIMIT 0, ".$num." 
     ");
     

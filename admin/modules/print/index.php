@@ -2,6 +2,7 @@
 require_once $_SERVER['DOCUMENT_ROOT']. '/lib/convertapi-php/lib/ConvertApi/autoload.php';
 use \ConvertApi\ConvertApi;
     
+    $url = urldecode($xc['url']['pdf']);
     //$obj_id = $_GET['obj'];
     
     # set your api secret
@@ -17,7 +18,7 @@ use \ConvertApi\ConvertApi;
     $result = ConvertApi::convert(
     'pdf',
     [
-        'Url' => 'https://postamap.ru/admin/postomat/1-800',
+        'Url' => $url,
         'FileName' => 'otchet-1',
         'ConversionDelay' => 30
     ],

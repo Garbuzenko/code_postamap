@@ -10,7 +10,7 @@
 
 <div class="col-sm-12 col-md-3 mb-2">
 <div class="dt-buttons btn-group" style="width: 100%;">
-<a style="padding: .290rem .75rem;" class="btn btn-primary buttons-copy buttons-html5" tabindex="0" aria-controls="datatable-buttons" href="<?=DOMAIN;?>/files/opendata/mos_districts.csv"><span>Скачать CSV</span></a>
+<a style="padding: .290rem .75rem;" class="btn btn-primary buttons-copy buttons-html5" tabindex="0" aria-controls="datatable-buttons" href="<?=DOMAIN;?>/admin/files/csv/transport.csv"><span>Скачать CSV</span></a>
 </div>
 </div>
 

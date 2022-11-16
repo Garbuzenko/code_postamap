@@ -1,0 +1,3 @@
+<?php
+
+$xc['noMainTmp'] = true;

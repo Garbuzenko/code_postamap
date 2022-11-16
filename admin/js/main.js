@@ -370,7 +370,8 @@ $('body').on('click', '.send_form', function() {
           'hide':false,
           'click':false,
           'lightGalleryActivate':false,
-          'imgSort':false
+          'imgSort':false,
+          'ajaxMessage':false
         };
 
         for (i = str.length - 1; i >= 0; --i) {
@@ -446,6 +447,20 @@ $('body').on('click', '.send_form', function() {
                     $('#opaco').height(h).fadeIn(200).removeClass('hidden');
                 }
                 
+                if (arr['ajaxMessage'] != false) {
+                    
+                    if (mobile == 1) {
+                       popupWindowMobFunc('<div class="popupMessageDivMob">'+arr['ajaxMessage']+'</div>','90%','200',10000);
+                    }
+                              
+                    else {
+                      var windowWidth = 400;
+                      var windowHeight = 200;
+                      popupWindowFunc('<div class="popupMessageDiv">'+arr['ajaxMessage']+'</div>',windowWidth,windowHeight,10000);
+                    }
+                    
+                }
+                
                 formData.append('module', arr['module']);
                 formData.append('component', arr['component']);
                 formData.append('action', 'ajax');
@@ -466,6 +481,10 @@ $('body').on('click', '.send_form', function() {
                        
                        if (arr['alert'] != false) {
                          alert(html);
+                       }
+                       
+                       if (arr['ajaxMessage'] != false) {
+                          $('.jsPopupClose').remove();
                        }
                        
                        if (isJSON(html) == true) {

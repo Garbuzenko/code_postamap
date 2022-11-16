@@ -31,8 +31,8 @@
 <input type="hidden" name="model_id" value="<?=$model_id;?>" />
 <input type="hidden" name="sq_diametr" value="<?=$sq_diametr;?>" />
 <input type="hidden" name="alert" value="0" />
-<input type="hidden" name="ok" value="Веса обновлены. Параметры для расчёта расположения постаматов пересчитаны." />
-
+<input type="hidden" name="ok" value="Веса обновлены" />
+<input type="hidden" name="ajaxMessage" value="Идёт пересчёт релевантности..." />
 <div class="col-8 d-flex justify-content-end" style="float: right; margin-top: 10px;">
                      
   <button type="button" name="save" class="send_form btn btn-primary" id="jsEditWeight" style="margin-right: 10px;">Сохранить</button>

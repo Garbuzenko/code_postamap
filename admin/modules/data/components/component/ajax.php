@@ -3,26 +3,20 @@
 $num = 30; // количество объектовв на странице
 
 // постраничная навигация по data_analiz_district
-if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_data_analiz_district') {
+if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_postamats') {
     
     $where = null;
-    $sport = null;
-    $district = null;
     
     if (!empty($_POST['filter'])) {
         
         $f = explode('=',$_POST['filter']);
         
-        if ($f[0] == 'sport_id') {
-            $where = " WHERE a.sport_id=".intval($f[1])." ";
-            $sport_id = intval($f[1]);
-            
-            $s = db_query("SELECT type FROM mln_type_sport WHERE id=".$sport_id." LIMIT 1");
-            $sport = $s[0]['type'];
+        if ($f[0] == 'organization_id') {
+            $where = " WHERE adm_area_id=".intval($f[1])." ";
         }
           
         if ($f[0] == 'district') {
-            $where = " WHERE a.district_id=".intval($f[1])." ";
+            $where = " WHERE district_id=".intval($f[1])." ";
             $district_id = intval($f[1]);
             
             $s = db_query("SELECT district FROM mln_districts WHERE id=".$district_id." LIMIT 1");
@@ -38,16 +32,10 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_data_analiz_district'
     $start = $page * $num - $num;
     
     $data = db_query("SELECT SQL_CALC_FOUND_ROWS 
-    a.koeff_y,
-    a.koeff_count_zone,
-    mln_type_sport.type,
-    mln_type_sport.smile_html,
-    mln_districts.district 
-    FROM data_analiz_district AS a 
-    LEFT JOIN mln_type_sport ON a.sport_id = mln_type_sport.id 
-    LEFT JOIN mln_districts ON a.district_id = mln_districts.id 
+    *
+    FROM postamats 
     ".$where." 
-    ORDER BY a.koeff_y DESC   
+    ORDER BY id  
     LIMIT ".$start.", ".$num);
         
     if ($data != false) {
@@ -55,10 +43,10 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_data_analiz_district'
         $rows = db_query("SELECT FOUND_ROWS() AS cnt");
         $col = $rows[0]['cnt'];
 
-        $nav = pagination($num, $col, $page, 'data_analiz_district');
+        $nav = pagination($num, $col, $page, 'postamats');
         
         ob_start();
-        require $_SERVER['DOCUMENT_ROOT'].'/modules/data/components/component/includes/analizDistrictsList.inc.php';
+        require $_SERVER['DOCUMENT_ROOT'].'/admin/modules/data/components/component/includes/postamatsObjectsList.inc.php';
         $html = ob_get_clean();
         
         exit($html);
@@ -450,43 +438,24 @@ if (isset($_POST['field']) && preg_match('/sportCat/is',$_POST['field']) ) {
 // подгружаемый список ведомственных организаций
 if (isset($_POST['field']) && preg_match('/organization/is',$_POST['field']) ) {
     
-    $table = $_POST['arr'];
-    $search = clearData($_POST['search']);
-    $org = array();
     
-     if ($table == 'mos_objects') {
+    $search = clearData($_POST['search']);
+    $btn = 'jsObjectsSearch';
        
-       $a = db_query("SELECT org_id   
-       FROM mos_objects 
-       WHERE org_id!=0 
-       GROUP BY org_id");
+     $sp = null;
+             
+     $ds = db_query("SELECT *    
+     FROM mln_adm_area    
+     WHERE adm_area LIKE ('%".$search."%')");
             
-       $btn = 'jsObjectsSearch';
-       
+     if ($ds != false) {
+       foreach($ds as $d) {
+           $sp .= '<li class="jsSelect" style="cursor: pointer;" id="'.$_POST['field'].'" data-id="'.$d['id'].'" data-click="'.$btn.'" data-input="jsClickFilter">'.$d['adm_area'].'</li>';        
+       }
      }
-                       
-     if ($a != false) {
-            
-        $sp = null;
-            
-        foreach($a as $b) {
-           $org[ $b['org_id'] ] = $b['org_id'];
-        }
-            
-        $ds = db_query("SELECT org_id, org_name    
-        FROM mos_organization    
-        WHERE org_name LIKE ('%".$search."%')");
-            
-            if ($ds != false) {
-                foreach($ds as $d) {
-                    if (!empty($org[ $d['org_id'] ])) {
-                        $sp .= '<li class="jsSelect" style="cursor: pointer;" id="'.$_POST['field'].'" data-id="'.$d['org_id'].'" data-click="'.$btn.'" data-input="jsClickFilter" data-input-val="org_id='.$d['org_id'].'">'.$d['org_name'].'</li>';
-                    }
-                }
-            }
   
             exit($sp);
-     }
+     
 } 
 // ------------------------------------------------------------------------------------------------
 
@@ -666,59 +635,17 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsHousesSearch') {
 }
 // -------------------------------------------------------------------------------------------------------
 
-// фильтры по спортивным объектам
+// фильтры по административным округам для постаматов
 if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsObjectsSearch') {
     
     $where = null;
-    $stArr = array();
-    
-    $district_id = intval($_POST['district_id']);
-    $district = $_POST['district'];
-    
-    $org_id = $_POST['org_id'];
-    $organization = $_POST['organization'];
-    
-    $sport_id = intval($_POST['sport_id']);
-    $sport = $_POST['sport'];
+    $adm_area_id = intval($_POST['adm_area_id']);
       
-    if (!empty($district_id))
-      $where = " WHERE a.district_id=".$district_id." ";
-      
-    if (!empty($org_id))
-      $where = " WHERE a.org_id=".$org_id." ";
-      
-    if (!empty($sport_id)) {
-        
-        $st = db_query("SELECT object_id 
-        FROM mos_objects_sportzone 
-        WHERE sport_id=".$sport_id." 
-        GROUP BY object_id");
-        
-        if ($st != false) {
-            foreach($st as $s) {
-                $stArr[] = $s['object_id'];
-            }
-            
-            $where = " WHERE a.object_id IN (".implode(',',$stArr).") ";
-        }
-        
-    }
-    
     $data = db_query("SELECT SQL_CALC_FOUND_ROWS 
-    a.object_id,
-    a.object,
-    a.address,
-    a.lng,
-    a.lat,
-    mos_organization.org_name,
-    mos_availability.availability,
-    mln_districts.district 
-    FROM mos_objects AS a 
-    LEFT JOIN mos_organization ON a.org_id = mos_organization.org_id 
-    LEFT JOIN mos_availability ON a.availability_id = mos_availability.id 
-    LEFT JOIN mln_districts ON a.district_id = mln_districts.id 
-    ".$where." 
-    ORDER BY a.id  
+    *
+    FROM postamats 
+    WHERE adm_area_id='".$adm_area_id."' 
+    ORDER BY id  
     LIMIT 0, ".$num);
         
     if ($data != false) {
@@ -726,33 +653,10 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsObjectsSearch') {
         $rows = db_query("SELECT FOUND_ROWS() AS cnt");
         $col = $rows[0]['cnt'];
 
-        $nav = pagination($num, $col, 1, 'mos_objects');
+        $nav = pagination($num, $col, 1, 'postamats');
         
-        $sportZone = array();
-        $sportType = array();
-    
-    
-        foreach($data as $b) {
-            $sportZone[] = $b['object_id'];
-        }
-        
-        $spz = db_query("SELECT a.object_id,
-        a.sport_id,
-        mln_type_sport.type  
-        FROM mos_objects_sportzone AS a 
-        LEFT JOIN mln_type_sport ON a.sport_id = mln_type_sport.id 
-        WHERE a.object_id IN (".implode(',',$sportZone).")");
-        
-        if ($spz != false) {
-            foreach($spz as $b) {
-                if (!empty($b['type'])) {
-                    $sportType[$b['object_id']][$b['sport_id']] = $b['type'];
-                }
-            }
-        }
-    
         ob_start();
-        require $_SERVER['DOCUMENT_ROOT'].'/modules/data/components/component/includes/sportObjectsList.inc.php';
+        require $_SERVER['DOCUMENT_ROOT'].'/admin/modules/data/components/component/includes/postamatsObjectsList.inc.php';
         $html = ob_get_clean();
         
         exit($html);

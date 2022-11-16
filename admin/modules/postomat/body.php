@@ -1,40 +1,92 @@
 <script>
-
-    ymaps.ready(function () {
-
-        // создаем яндекс-карту с координатами центра Москвы
-        var myMap = new ymaps.Map('map', {
-            center: [<?=$lat;?>, <?=$lng;?>],
-            zoom: 15,
-            controls: ['zoomControl', 'searchControl']
+function init() {
+    <?if(!empty($houses)):?>
+    // Задаём точки мультимаршрута.
+    var pointB = [<?=$lat;?>,<?=$lng;?>];
+    
+    <?$i=1; foreach($houses as $b):?>
+        var pointA<?=$i?> = [<?=$b['lat'];?>,<?=$b['lng'];?>],
+        /**
+         * Создаем мультимаршрут.
+         * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/multiRouter.MultiRoute.xml
+         */
+        multiRoute<?=$i;?> = new ymaps.multiRouter.MultiRoute({
+            referencePoints: [pointA<?=$i;?>,pointB],
+            params: {
+                //Тип маршрутизации - пешеходная маршрутизация.
+                routingMode: 'pedestrian'
+            }
         }, {
-            
-        }),
+            // Автоматически устанавливать границы карты так, чтобы маршрут был виден целиком.
+           // boundsAutoApply: true,
+            // Внешний вид линии активного маршрута.
+            routeActiveStrokeWidth: 8,
+            routeActiveStrokeStyle: 'solid',
+            routeActiveStrokeColor: "<?=$colorsRoute[$i];?>"
+        });
         
-        
-          // добавляем метки с координатами объектов инфраструктуры
-          objectManager = new ymaps.ObjectManager({
-            // Чтобы метки начали кластеризоваться, выставляем опцию.
-            clusterize: true,
-            // ObjectManager принимает те же опции, что и кластеризатор.
-            gridSize: 32,
-            clusterDisableClickZoom: false,
-            clusterIconLayout: "default#pieChart"
-            
-            
-          });
+        // Подпишемся на событие готовности отображения маршрута.
+multiRoute<?=$i;?>.events.add('update', function() {
+    // Получение списка построенных маршрутов.
+    var routes = multiRoute<?=$i;?>.getRoutes();
+    // Проход по коллекции маршрутов.
+    // Для каждого маршрута подпишемся на события
+    // 'mouseenter' и 'mouseleave'.
+    routes.each(function(route) {
+        route.events.add('mouseenter', function() {
+           // Получение ссылки на активный маршрут.
+           var active = multiRoute<?=$i;?>.getActiveRoute();
+            route.options.set('strokeWidth', 10);
+            // Активный маршрут будет перекрашиваться в черный цвет.
+            if (active === route) {
+                route.options.set('strokeColor', "#000000");
+            } else {
+                route.options.set('strokeColor', "#FFFFFF");
+            }
+        });
+        route.events.add('mouseleave', function() {
+            route.options.unset('strokeWidth');
+            route.options.unset('strokeColor');
+        });
+    });  
+});
+    <?$i++; endforeach;?>
+    <?endif;?>
+    // Создаем карту с добавленной на нее кнопкой.
+    var myMap = new ymaps.Map('map', {
+        center: [<?=$lat;?>, <?=$lng;?>],
+        zoom: 17,
+        controls: ['zoomControl']
+    }, {
+    });
+    
+
+    <?if(!empty($houses)):?>
+    // Добавляем мультимаршрут на карту.
+    <?$i=1; foreach($houses as $b):?>
+    myMap.geoObjects.add(multiRoute<?=$i;?>);
+    <?$i++; endforeach;?>
+    <?endif;?>
+    
+    // добавляем метки с координатами объектов инфраструктуры
+    objectManager = new ymaps.ObjectManager({
+      // Чтобы метки начали кластеризоваться, выставляем опцию.
+      clusterize: true,
+      // ObjectManager принимает те же опции, что и кластеризатор.
+      gridSize: 32,
+      clusterDisableClickZoom: false,
+      clusterIconLayout: "default#pieChart"
+    });
          
-           
-          myMap.geoObjects.add(objectManager);
-          
-          
-          // Создадим пункты выпадающего списка.
+    myMap.geoObjects.add(objectManager);
+    
+      // Создадим пункты выпадающего списка.
           var selectedStatus = true;
           
-          var listBoxItems = ['Постомат','Постомат конкурента', 'Инфраструктура','Транспорт']
+          var listBoxItems = ['Конкуренты','Инфраструктура','Транспорт']
             .map(function (title) {
                 
-                if (title == '<?if ($postomatsObj == true):?>Постомат<?else:?>Инфраструктура<?endif;?>') {
+                if (title == 'Постомат') {
                     selectedStatus = true;
                 }
                 
@@ -55,14 +107,12 @@
             filters[filter.data.get('content')] = filter.isSelected();
             return filters;
         },
- 
-        
         
         // Теперь создадим список, содержащий 5 пунктов.
         listBoxControl = new ymaps.control.ListBox({
             data: {
-                content: 'Фильтр',
-                title: 'Фильтр'
+                content: 'Фильтры',
+                title: 'Фильтры'
             },
             items: listBoxItems,
             state: {
@@ -74,9 +124,9 @@
     
     myMap.controls.add(listBoxControl);
     
-    
     objectManager.setFilter('properties.type == "postomat"');
     
+
     // Добавим отслеживание изменения признака, выбран ли пункт списка.
     listBoxControl.events.add(['select', 'deselect'], function (e) {
         var listBoxItem = e.get('target');
@@ -101,99 +151,14 @@
     $.ajax({
         url: "/admin/modules/postomat/files/<?=$dataJson;?>"
     }).done(function (data) {
-        
         objectManager.add(data);
-        
-        
     });
-          
+}
+
+ymaps.ready(init);
 
 
-        // добавляем кнопки на карту
-        buttons = {
-            heatmap: new ymaps.control.Button({
-                data: {
-                    content: 'Население',
-                    image: '/admin/modules/main/components/map/img/heatmap_icon.png'
-                },
-                options: {
-                    selectOnClick: true,
-                    maxWidth: 250,
-                    size: 'large'
-                }
-            })
-
-        };
-        
-        // подключаем модуль тепловой карты
-        ymaps.modules.require(['Heatmap'], function (Heatmap) {
-
-            // загружаем в массив javascript из php-массива $mos_realty данные о плотности населения
-            heatmap_data = {
-                type: 'FeatureCollection',
-                features: [
-                <?$i = 0; foreach ($houses as $b):?>
-                    {
-                        id: 'id<?=$b['id']?>',
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [<?=$b['lat']?>, <?=$b['lng']?>]
-                        },
-                        properties: {
-                            weight: <?=$b['area_residential']?>
-                        }
-                    }<?if (count($houses) > $i):?>,<?endif;?>
-                <?$i++; endforeach;?>
-                ]
-            };
-
-            gradients = [{
-                0.1: 'rgba(128, 255, 0, 0.7)',
-                0.2: 'rgba(255, 255, 0, 0.8)',
-                0.7: 'rgba(234, 72, 58, 0.9)',
-                1.0: 'rgba(162, 36, 25, 1)'
-            }, {
-                0.1: 'rgba(162, 36, 25, 0.7)',
-                0.2: 'rgba(234, 72, 58, 0.8)',
-                0.7: 'rgba(255, 255, 0, 0.9)',
-                1.0: 'rgba(128, 255, 0, 1)'
-            }],
-            radiuses = [5, 10, 20, 30],
-            opacities = [0.4, 0.6, 0.8, 1];
-
-            // создаем тепловую карту
-            var heatmap = new Heatmap(heatmap_data,
-             {
-                gradient: gradients[0],
-                radius: radiuses[2],
-                opacity: opacities[2],
-                dissipating: false
-            });
-
-            // создаем событие нажатия на кнопку "Плотность населения" для отображения тепловой карты
-            buttons.heatmap.events.add('press', function () {
-                heatmap.setMap(
-                    heatmap.getMap() ? null : myMap
-                );
-            });
-            
-            
- 
-            // добавляем на карту созданные кнопки
-            for (var key in buttons) {
-                if (buttons.hasOwnProperty(key)) {
-                    myMap.controls.add(buttons[key]);
-                }
-            }
-
-        });
-
-});
 </script>
-
-
-<script src="<?=DOMAIN;?>/admin/themplate/dist/assets/vendors/dayjs/dayjs.min.js"></script>
 
 <script>
 var lineOptions = {
@@ -563,7 +528,7 @@ var barOptions = {
 
 
 var radialGradientOptions = {
-  series: [<?=$postomat[0]['w_relevance'];?>],
+  series: [<?=round($postomat[0]['w_relevance']);?>],
   chart: {
     height: 350,
     type: "radialBar",
