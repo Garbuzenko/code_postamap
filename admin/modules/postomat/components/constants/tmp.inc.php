@@ -36,7 +36,7 @@
 
       <div class="col-8 d-flex justify-content-end" style="float: right; margin-top: 10px;">
         <button type="button" name="save" class="send_form btn btn-primary" id="jsEditConstants" style="margin-right: 10px;">Сохранить</button>
-        <button type="button" name="generate" class="send_form btn btn-secondary" id="jsEditConstants">Пересчитать</button>
+        <!--<button type="button" name="generate" class="send_form btn btn-secondary" id="jsEditConstants">Пересчитать</button>-->
       </div>
 
 

@@ -72,28 +72,36 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsEditWeight') {
     
     if ($btn == 'generate') {
         
-    // делаем пресчёn параметров с учётом нового веса
-    $weight = array();
     
-   $a = db_query("update mln_factor_weight set max=(select max(relevance) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR ) where factor_id = 0","u");
-    
-   $a = db_query("update mln_factor_weight set max=(select max(people) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR ) where factor_id = 1","u");
-    
-   $a = db_query("update mln_factor_weight set max=(select max(infrastructure) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 2","u");
-    
-   $a = db_query("update mln_factor_weight set max=(select max(transport) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 3","u");
-    
-   $a = db_query("update mln_factor_weight set max=(select max(comercial_postsmat) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 4","u");
-    
-   $a = db_query("update mln_factor_weight set min=(select min(relevance) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 0","u");
-    
-   $a = db_query("update mln_factor_weight set min=(select min(people) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 1","u");
+     $weight = array();
+     $const = array();
+     $constants = db_query("SELECT * FROM constants");
    
-   $a = db_query("update mln_factor_weight set min=(select min(infrastructure) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 2","u");
+     if ($constants != false) {
+        foreach($constants as $b) {
+            $const[ $b['name'] ] = $b['value'];
+        }
+     }
     
-   $a = db_query("update mln_factor_weight set min=(select min(transport) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 3","u");
-    
-   $a = db_query("update mln_factor_weight set min=(select min(comercial_postsmat) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 4","u");   
+       $a = db_query("update mln_factor_weight set max=(select max(relevance) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR ) where factor_id = 0","u");
+        
+       $a = db_query("update mln_factor_weight set max=(select max(people) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR ) where factor_id = 1","u");
+        
+       $a = db_query("update mln_factor_weight set max=(select max(infrastructure) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 2","u");
+        
+       $a = db_query("update mln_factor_weight set max=(select max(transport) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 3","u");
+        
+       $a = db_query("update mln_factor_weight set max=(select max(comercial_postsmat) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 4","u");
+        
+       $a = db_query("update mln_factor_weight set min=(select min(relevance) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 0","u");
+        
+       $a = db_query("update mln_factor_weight set min=(select min(people) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 1","u");
+       
+       $a = db_query("update mln_factor_weight set min=(select min(infrastructure) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 2","u");
+        
+       $a = db_query("update mln_factor_weight set min=(select min(transport) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 3","u");
+        
+       $a = db_query("update mln_factor_weight set min=(select min(comercial_postsmat) from relevant_places where model_id = mln_factor_weight.model_id and  SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) where factor_id = 4","u");   
     
     // таблица весов
     $wh = db_query("SELECT * FROM mln_factor_weight 
@@ -111,41 +119,141 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsEditWeight') {
               );
         }
     }
+
+    //Удаляем записи из таблицы канибализации
+    $can = db_query("DELETE FROM `cannibalization` 
+    WHERE SQ_DIAMETR='".$sq_diametr."' 
+    AND MODEL_ID='".$model_id."'","d");
+
+    //Выбираем значения из таблицы POSTAMATS по модели и диаметру.
+    $postamats = db_query("SELECT * 
+    FROM postamats 
+    WHERE SQ_DIAMETR='".$sq_diametr."' 
+    AND MODEL_ID='".$model_id."' ORDER BY SQ_ID");
+
+     if ($postamats != false) {
+        
+        foreach($postamats as $p) {
+	    
+        //Делаем SELECT из таблицы relevant_places по MODEL_ID, SQ_DIAMETR, SQ_ID
+ 	    $obj = db_query("SELECT * 
+         FROM relevant_places 
+         WHERE SQ_ID='".$p['SQ_ID']."' 
+         AND SQ_DIAMETR='".$p['SQ_DIAMETR']."'
+         AND MODEL_ID='".$p['MODEL_ID']."'");
     
-    $obj = db_query("SELECT * FROM relevant_places WHERE SQ_DIAMETR='".$sq_diametr."' AND MODEL_ID=".$model_id);
+         if ($obj != false) {
+            
+            foreach($obj as $b) {
+            
+                $relevance = 0;
+                
+                $infrastructureIndexResult = ($b['infrastructure'] - $weight[2]['min']) / ($weight[2]['max'] - $weight[2]['min']);
+                $infrastructureIndexResult = $infrastructureIndexResult * $weight[2]['weight'];
+                
+                $comPostamatsIndexResult = ($b['comercial_postsmat'] - $weight[4]['min']) / ($weight[4]['max'] - $weight[4]['min']);
+                $comPostamatsIndexResult = $comPostamatsIndexResult * $weight[4]['weight'];
+                
+                $transportIndexResult = ($b['transport'] - $weight[3]['min']) / ($weight[3]['max'] - $weight[3]['min']);
+                $transportIndexResult = $transportIndexResult * $weight[3]['weight'];
+                
+                $peopleIndexResult = ($b['people'] - $weight[1]['min']) / ($weight[1]['max'] - $weight[1]['min']);
+                $peopleIndexResult = $peopleIndexResult * $weight[1]['weight'];
+                
+                // радиус по которому будем считать
+                $radius = ($b['SQ_DIAMETR'] * $const['w_select_cannibalization']) / 2;//$b['SQ_DIAMETR'];
+
+                $lat_r = (0.000899352 * $radius)/100;
+	            $lng_r = (0.001608967 * $radius)/100;
+
+                $lat_min = $b['lat'] - $lat_r;
+    	        $lat_max = $b['lat'] + $lat_r;
     
-    if ($obj != false) {
-        foreach($obj as $b) {
-            
-            $relevance = 0;
-            
-            $infrastructureIndexResult = ($b['infrastructure'] - $weight[2]['min']) / ($weight[2]['max'] - $weight[2]['min']);
-            $infrastructureIndexResult = $infrastructureIndexResult * $weight[2]['weight'];
-            
-            $comPostamatsIndexResult = ($b['comercial_postsmat'] - $weight[4]['min']) / ($weight[4]['max'] - $weight[4]['min']);
-            $comPostamatsIndexResult = $comPostamatsIndexResult * $weight[4]['weight'];
-            
-            $transportIndexResult = ($b['transport'] - $weight[3]['min']) / ($weight[3]['max'] - $weight[3]['min']);
-            $transportIndexResult = $transportIndexResult * $weight[3]['weight'];
-            
-            $peopleIndexResult = ($b['people'] - $weight[1]['min']) / ($weight[1]['max'] - $weight[1]['min']);
-            $peopleIndexResult = $peopleIndexResult * $weight[1]['weight'];
-           
-            
-            $resultIndex = $infrastructureIndexResult + $comPostamatsIndexResult + $transportIndexResult + $peopleIndexResult;
-            $relevance = $b['priority'] * $resultIndex;
-            
-            $upd = db_query("UPDATE relevant_places 
-            SET relevance='".$relevance."',
-            w_infrastructure='".$infrastructureIndexResult."',
-            w_people='".$peopleIndexResult."',
-            w_transport='".$transportIndexResult."',
-            w_comercial_postsmat='".$comPostamatsIndexResult."'  
-            WHERE id='".$b['id']."' 
-            LIMIT 1","u");
-            
-            
+    	        $lng_min = $b['lng'] - $lng_r;
+    	        $lng_max = $b['lng'] + $lng_r;
+                
+                $cannibalization_field = 0;
+                $w_cannibalization = 0;
+                $cannibalization_d = 0;
+                
+                    
+                //Считаем параметр relevant_places-cannibalization по формуле:
+	            //Выбираем значения из cannibalization на расстоянии SQ_DIAMETR 
+	            $cannibalization = db_query("SELECT * 
+                FROM cannibalization 
+                WHERE SQ_DIAMETR='".$p['SQ_DIAMETR']."' 
+                AND MODEL_ID='".$p['MODEL_ID']."' 
+                AND (lat BETWEEN '".$lat_min."' AND '".$lat_max."') 
+                AND (lng BETWEEN '".$lng_min."' AND '".$lng_max."')");
+                
+                if ($cannibalization == false) {
+                    $cannibalization_d = $p['SQ_DIAMETR'];
+                }
+                
+                
+                if ($cannibalization != false) {
+                    
+                    $cannibalization_d = 100000;
+                 
+                    foreach($cannibalization as $can) {
+                        
+                        // считаем расстояние от текущей точки в метрах
+                       $distance = distance($b['lat'],$b['lng'],$can['lat'],$can['lng']) * 1000;
+                       
+                       if ($cannibalization_d > $distance) {
+                         $cannibalization_d = $distance;
+                       }
+                       
+                       $cannibalization_field += $can['w_relevance'] / ($distance + $const['R0_cannibalization']);
+                   
+                    }
+                }
+
+
+                $cannibalizationIndexResult = $cannibalization_field * $weight[6]['weight'];
+                $w_cannibalization = $cannibalizationIndexResult;
+                
+                $resultIndex = $cannibalizationIndexResult + $infrastructureIndexResult + $comPostamatsIndexResult + $transportIndexResult + $peopleIndexResult;
+                $relevance = $b['priority'] * $resultIndex;
+                
+                // зануляем релевантность для постоматов расположенных ближе чем минимальное расстояние между постоматами
+                if ($cannibalization_d < $weight[7]['weight']) {
+                    $relevance = 0;
+                    $cannibalization_field = 0;
+                    $w_cannibalization = 0;
+                    $cannibalization_d = 0;
+                }
+                
+                if ($relevance < 0) {
+                    $relevance = 0;
+                }
+
+
+                $upd = db_query("UPDATE relevant_places 
+                SET relevance='".$relevance."',
+                w_infrastructure='".$infrastructureIndexResult."',
+                w_people='".$peopleIndexResult."',
+                w_transport='".$transportIndexResult."',
+                w_comercial_postsmat='".$comPostamatsIndexResult."',
+                cannibalization='".$cannibalization_field."',
+                w_cannibalization='".$w_cannibalization."',
+                cannibalization_d='".$cannibalization_d."'
+                WHERE id='".$b['id']."' 
+                LIMIT 1","u");
+                           
         }
+        
+        // после цикла по sq_id находим максимальные значения по этому sq_id и вставляем строку в таб. cannibalization
+        $add = db_query("INSERT INTO cannibalization (SELECT * FROM relevant_places 
+        WHERE SQ_ID='".$p['SQ_ID']."' 
+        AND SQ_DIAMETR='".$p['SQ_DIAMETR']."'
+        AND MODEL_ID='".$p['MODEL_ID']."'
+        ORDER BY w_relevance DESC 
+        LIMIT 1)","i");
+        
+	   }
+     }
+
         
         // обновляем max для relevance
         $updMaxRelevance = db_query("UPDATE mln_factor_weight 
@@ -157,6 +265,25 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsEditWeight') {
         SET min=(SELECT min(relevance) FROM relevant_places WHERE model_id = mln_factor_weight.model_id AND SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) 
         WHERE factor_id = 0");
         
+        // обновляем max для relevance
+        $updMaxRelevance = db_query("UPDATE mln_factor_weight 
+        SET max=(SELECT max(cannibalization) FROM relevant_places WHERE model_id = mln_factor_weight.model_id AND SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) 
+        WHERE factor_id = 6");
+        
+        // обновляем min для relevance
+        $updMinRelevance = db_query("UPDATE mln_factor_weight 
+        SET min=(SELECT min(cannibalization) FROM relevant_places WHERE model_id = mln_factor_weight.model_id AND SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) 
+        WHERE factor_id = 6");
+        
+        // обновляем max для relevance
+        $updMaxRelevance = db_query("UPDATE mln_factor_weight 
+        SET max=(SELECT max(cannibalization_d) FROM relevant_places WHERE model_id = mln_factor_weight.model_id AND SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) 
+        WHERE factor_id = 7");
+        
+        // обновляем min для relevance
+        $updMinRelevance = db_query("UPDATE mln_factor_weight 
+        SET min=(SELECT min(cannibalization_d) FROM relevant_places WHERE model_id = mln_factor_weight.model_id AND SQ_DIAMETR = mln_factor_weight.SQ_DIAMETR) 
+        WHERE factor_id = 7");
         
         // достаём из базы новые веса
         $weight = array();
@@ -224,6 +351,9 @@ postamats.comercial_postsmat=relevant_places.comercial_postsmat,
 postamats.category=relevant_places.category,
 postamats.category_id=relevant_places.category_id,
 postamats.model=relevant_places.model,
+postamats.cannibalization=relevant_places.cannibalization,
+postamats.w_cannibalization=relevant_places.w_cannibalization,
+postamats.cannibalization_d=relevant_places.cannibalization_d,
 postamats.w_infrastructure=relevant_places.w_infrastructure,
 postamats.w_people=relevant_places.w_people,
 postamats.w_transport=relevant_places.w_transport,
@@ -232,13 +362,11 @@ postamats.priority=relevant_places.priority,
 postamats.w_relevance=relevant_places.w_relevance,
 postamats.model_id=relevant_places.model_id","u");
 
-        $a = db_query("set @val = 0;update  postamats set rating = (@val:=@val+1) where model_id = 0 and sq_diametr = 100 order by relevance DESC;","u");
-
-        $a = db_query("set @val = 0;update  postamats set rating = (@val:=@val+1) where model_id = 0 and sq_diametr = 200 order by relevance DESC;","u");
-        
-        $a = db_query("set @val = 0;update  postamats set rating = (@val:=@val+1) where model_id = 0 and sq_diametr = 400 order by relevance DESC;","u");
+        $a = db_query("set @val = 0;update  postamats set rating = (@val:=@val+1) where model_id = '".$model_id."' and sq_diametr = '".$sq_diametr."' order by relevance DESC;","u");
       
-        $html = '<div class="popupMessageDiv">Релевантность пересчитана</div>';
+      }
+      
+      $html = '<div class="popupMessageDiv">Релевантность пересчитана</div>';
         $popup = 'popup';
         $width = 400;
         $height = 250;
@@ -260,8 +388,6 @@ postamats.model_id=relevant_places.model_id","u");
         $h = callbackFunction($arr);
         exit($h);
       
-      
-      }
     }
     
     exit('ok');

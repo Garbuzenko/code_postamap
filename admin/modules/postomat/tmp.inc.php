@@ -398,6 +398,22 @@
 
                 </section>
                 <?endif;?>
+                
+                <?if($xc['noMainTmp'] == false && MOBILE==false):?>
+                 <section class="section">
+                  
+                    <div class="card" style="padding-bottom: 30px;">
+                      <div class="card-header">
+                            Деловая активность
+                      </div>
+                      <div style="overflow: hidden; width: 900px; height: 500px; margin: 0 auto;">
+                       <iframe style="margin-left: -500px; margin-top: -180px;" width="1400" height="680" src="https://www.avito.ru/moskva/odezhda_obuv_aksessuary/zhenskaya_odezhda/kupalniki-ASgBAgICAkSmAbpL3gLWCw?cd=1&geoCoords=<?=$lat;?>,<?=$lng;?>&map=e30%3D&radius=1"></iframe>
+                     </div>
+                    </div>
+                  
+                 </section>
+                 <?endif;?>
+                
             </div>
 
 <?if($xc['noMainTmp'] == true):?>

@@ -80,6 +80,7 @@ $inf = db_query("SELECT a.*,
 if ($inf != false) {
     
     // таблица весов
+    /*
     $wh = db_query("SELECT * FROM mln_factor_weight WHERE model_id=".$model);
     
     if ($wh != false) {
@@ -91,6 +92,7 @@ if ($inf != false) {
               );
         }
     }
+    */
     
     foreach($inf as $b) {
         
